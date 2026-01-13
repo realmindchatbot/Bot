@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "owner",
     version: "1.3.0",
-    author: "Mᴏʜᴀᴍᴍᴀᴅ Aᴋᴀsʜ",
+    author: "washiq",
     role: 0,
     shortDescription: "Owner information with image",
     category: "Information",
@@ -18,17 +18,15 @@ module.exports = {
   onStart: async function ({ api, event }) {
     const ownerText = 
 `╭─ 👑 Oᴡɴᴇʀ Iɴғᴏ 👑 ─╮
-│ 👤 Nᴀᴍᴇ       : Mᴏʜᴀᴍᴍᴀᴅ Aᴋᴀsʜ
-│ 🧸 Nɪᴄᴋ       : Aᴋᴀsʜ
-│ 🎂 Aɢᴇ        : 18+
+│ 👤 Nᴀᴍᴇ       : 𝙼𝙳 𝚂𝙰𝙰𝙳 𝙷𝙾𝚂𝙰𝙸𝙽
+│ 🧸 Nɪᴄᴋ       : 𝚂𝙰𝙰𝙳
+│ 🎂 Aɢᴇ        : 19+
 │ 💘 Rᴇʟᴀᴛɪᴏɴ : Sɪɴɢʟᴇ
-│ 🎓 Pʀᴏғᴇssɪᴏɴ : Sᴛᴜᴅᴇɴᴛ
-│ 📚 Eᴅᴜᴄᴀᴛɪᴏɴ : Iɴᴛᴇʀ 2ɴᴅ Yᴇᴀʀ
-│ 🏡 Lᴏᴄᴀᴛɪᴏɴ : 𝐃𝐡𝐚𝐤𝐚 - 𝐆𝐚𝐳𝐢𝐩𝐮𝐫
+│ 📑profession : Sᴛᴜᴅᴇɴᴛ
 ├─ 🔗 Cᴏɴᴛᴀᴄᴛ ─╮
-│ 📘 Facebook  : fb.com/arakashiam
-│ 💬 Messenger: m.me/arakashiam
-│ 📞 WhatsApp  : wa.me/01933165880
+│ 📘 Facebook  :https://www.facebook.com/share/185KUbutjn/
+│ 🌐𝙳𝙴𝚅𝙸𝙽𝙵𝙾
+│ 𝚆𝙰𝚂𝙷𝙸𝙺 𝙰𝙳𝙽𝙰𝙽
 ╰────────────────╯`;
 
     const cacheDir = path.join(__dirname, "cache");
