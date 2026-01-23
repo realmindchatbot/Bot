@@ -23,9 +23,9 @@ module.exports = {
       "Etachi",
       "ɆtaChi",
       "Saad",
-      ".sad",
+      ".saad",
       "সাদ",
-      "sad",
+      "saad",
       "saad"
     ].map(t => t.toLowerCase());
 
@@ -33,7 +33,7 @@ module.exports = {
     if (!TRIGGERS.some(t => text.includes(t))) return;
 
     const REPLIES = [
-      " ওরে মেনশন দিস না Alisa রে নিয়া চিপায় গেছে 😩🐸",
+      " ওরে মেনশন দিস না গফ রে নিয়া চিপায় গেছে 😩🐸",
       "বস এক আবাল তুমারে ডাকতেছে 😂😏"
     ];
 
