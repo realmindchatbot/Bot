@@ -25,7 +25,7 @@ module.exports = {
       "Saad",
       ".saad",
       "সাদ",
-      "সন্ন্যাসী",
+      "সন্ন্যাসী 😇",
       "saad" 
       "@সন্ন্যাসী 😇"
     ].map(t => t.toLowerCase());
