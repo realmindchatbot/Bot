@@ -35,8 +35,8 @@ module.exports = {
     if (!isMatched) return;
 
     const REPLIES = [
-      "এই আবাল খায়া দায়া কাজ নাই হুদাই @everyone মারাস 🙄🫩",
-      "তোর মত কি সবাই অকেজো নাকি যে gc তে আইসা পইড়া থাকব😂😒"
+      "খায়া দায়া কাজ নাই হুদাই @everyone মারাস আবাল 🙄🫩",
+      "খায়া দায়া কাজ নাই হুদাই @everyone মারাস আবাল 🙄🫩"
     ];
 
     const randomReply = REPLIES[Math.floor(Math.random() * REPLIES.length)];
