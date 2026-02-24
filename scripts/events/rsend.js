@@ -1,26 +1,17 @@
-const path = require("path");
 const fs = require("fs-extra");
+const axios = require("axios");
+const path = require("path");
 
 module.exports = {
   config: {
     name: "rsend",
-    version: "3.3",
+    version: "3.5",
     author: "SaAd & Gemini",
-    description: "Recover unsent messages"
+    category: "events"
   },
 
-  onStart: async function ({ api, event }) { },
-
-  onChat: async function ({ api, event, usersData }) {
+  onEvent: async function ({ api, event, usersData }) {
     const { messageID, senderID, threadID, body: content, type, attachments } = event;
-
-    // মডিউল চেক (গিটহাবের জন্য জরুরি)
-    let axios;
-    try {
-      axios = require("axios");
-    } catch (e) {
-      return; // মডিউল না থাকলে এরর দিবে না, চুপ থাকবে
-    }
 
     if (!global.logMessage) global.logMessage = new Map();
 
@@ -29,7 +20,6 @@ module.exports = {
         body: content || "",
         attachments: attachments || []
       });
-      return;
     }
 
     if (type === "message_unsend") {
@@ -38,7 +28,7 @@ module.exports = {
 
       try {
         const name = await usersData.getName(senderID) || "Someone";
-        let msgBody = `নিগ্গা 🐸🙏 ${name}, delete a message\n\n${savedMsg.body ? `#: ${savedMsg.body}` : ""}`;
+        let msgBody = `নিগ্গা 🐸🙏 ${name}, এই মেসেজটি ডিলিট করেছে:\n\n${savedMsg.body ? `#: ${savedMsg.body}` : ""}`;
 
         const streams = [];
         const cacheDir = path.join(__dirname, "cache");
