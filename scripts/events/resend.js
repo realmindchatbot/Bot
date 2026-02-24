@@ -1,46 +1,65 @@
-const fs = require("fs-extra");
+.event install rsend.js const fs = require("fs-extra");
 const axios = require("axios");
+const path = require("path");
 
 module.exports = {
   config: {
-    name: "resend",
-    version: "2.6",
-    author: "nai 😞",
-    description: "মেসেজ আনসেন্ড করলে শনাক্ত করবে"
+    name: "rsend",
+    version: "3.0",
+    author: "SaAd / Gemini",
+    description: "Recover unsent messages and media"
   },
 
-  // এই ফাংশনটি না থাকলে 'Function onStart is missing' এরর দেখায়
   onStart: async function ({ api, event }) {
-    // এটি খালি থাকলেও সমস্যা নেই
   },
 
   onChat: async function ({ api, event, usersData }) {
-    const { messageID, senderID, threadID, body: content, type } = event;
+    const { messageID, senderID, threadID, body: content, type, attachments } = event;
 
     if (!global.logMessage) global.logMessage = new Map();
 
     if (type !== "message_unsend") {
       global.logMessage.set(messageID, {
         body: content || "",
-        attachments: event.attachments || []
+        attachments: attachments || []
       });
       return;
     }
 
     if (type === "message_unsend") {
       const savedMsg = global.logMessage.get(messageID);
-      if (!savedMsg) return;
-
-      if (senderID == api.getCurrentUserID()) return;
+      if (!savedMsg || senderID == api.getCurrentUserID()) return;
 
       try {
-        const name = await usersData.getName(senderID) || "কেউ একজন";
-        const msgBody = `নিগ্গা ${name}, এই মেসেজটি ডিলিট করেছে। 🐸\n\n${savedMsg.body ? `ডিলিট করা টেক্সট: ${savedMsg.body}` : "কোনো টেক্সট ছিল না (শুধু ছবি/ভিডিও ছিল)"}`;
+        const name = await usersData.getName(senderID) || "Someone";
+        let msgBody = `নিগ্গা ${name}, delete a massage 🐸\n\n${savedMsg.body ?`#: ${savedMsg.body}` : ""}`;
 
-        return api.sendMessage(msgBody, threadID);
-        
+        const streams = [];
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+
+        for (const attachment of savedMsg.attachments) {
+          const ext = attachment.type === "photo" ? "jpg" : 
+                      attachment.type === "video" ? "mp4" : 
+                      attachment.type === "audio" ? "mp3" : "bin";
+          
+          const filePath = path.join(cacheDir, `${Date.now()}_${attachment.ID}.${ext}`);
+          const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
+          fs.writeFileSync(filePath, Buffer.from(response.data));
+          streams.push(fs.createReadStream(filePath));
+        }
+
+        await api.sendMessage({
+          body: msgBody,
+          attachment: streams
+        }, threadID);
+
+        streams.forEach(stream => {
+          if (fs.existsSync(stream.path)) fs.unlinkSync(stream.path);
+        });
+
       } catch (error) {
-        console.error("Unsend Error:", error);
+        console.error("Unsend Recovery Error:", error);
       }
     }
   }
