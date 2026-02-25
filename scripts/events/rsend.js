@@ -5,10 +5,16 @@ const path = require("path");
 module.exports = {
   config: {
     name: "rsend",
-    version: "4.0",
+    version: "4.1",
     author: "Saad",
     category: "events",
     description: "Recover unsent messages (text & media)"
+  },
+
+  // REQUIRED for GoatBot
+  onStart: async function () {
+    if (!global.GoatBot.onDeleteStore)
+      global.GoatBot.onDeleteStore = new Map();
   },
 
   onChat: async function ({ api, event, usersData }) {
@@ -24,7 +30,7 @@ module.exports = {
         attachments: attachments || []
       });
 
-      // Auto cleanup after 5 minutes
+      // Auto delete after 5 minutes
       setTimeout(() => {
         global.GoatBot.onDeleteStore.delete(messageID);
       }, 5 * 60 * 1000);
@@ -32,9 +38,9 @@ module.exports = {
       return;
     }
 
-    // When message is unsent
+    // When message unsent
     if (type === "message_unsend") {
-      const savedData = global.GoatBot.onDeleteStore.get(event.messageID);
+      const savedData = global.GoatBot.onDeleteStore.get(messageID);
 
       if (!savedData || senderID == api.getCurrentUserID())
         return;
@@ -67,10 +73,10 @@ module.exports = {
             responseType: "arraybuffer"
           });
 
-          fs.writeFileSync(filePath, Buffer.from(response.data));
+          fs.writeFileSync(filePath, Bufferी);
+
           attachmentStreams.push(fs.createReadStream(filePath));
 
-          // Auto delete file after send
           setTimeout(() => {
             if (fs.existsSync(filePath))
               fs.unlinkSync(filePath);
@@ -82,7 +88,7 @@ module.exports = {
           attachment: attachmentStreams
         }, threadID);
 
-        global.GoatBot.onDeleteStore.delete(event.messageID);
+        global.GoatBot.onDeleteStore.delete(messageID);
 
       } catch (err) {
         console.error("RSEND ERROR:", err);
