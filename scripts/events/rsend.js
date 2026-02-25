@@ -1,98 +1,39 @@
-const fs = require("fs-extra");
-const axios = require("axios");
-const path = require("path");
-
 module.exports = {
   config: {
     name: "rsend",
-    version: "4.1",
+    version: "6.0",
     author: "Saad",
+    role: 0,
     category: "events",
-    description: "Recover unsent messages (text & media)"
+    description: "Recover unsent messages"
   },
 
-  // REQUIRED for GoatBot
   onStart: async function () {
-    if (!global.GoatBot.onDeleteStore)
-      global.GoatBot.onDeleteStore = new Map();
+    global.rsendStore = new Map();
+    console.log("RSEND EVENT LOADED");
   },
 
   onChat: async function ({ api, event, usersData }) {
-    const { messageID, senderID, threadID, body, attachments, type } = event;
+    const { messageID, senderID, threadID, body, type } = event;
 
-    if (!global.GoatBot.onDeleteStore)
-      global.GoatBot.onDeleteStore = new Map();
+    if (!global.rsendStore)
+      global.rsendStore = new Map();
 
-    // Save normal messages
     if (type !== "message_unsend") {
-      global.GoatBot.onDeleteStore.set(messageID, {
-        body: body || "",
-        attachments: attachments || []
-      });
-
-      // Auto delete after 5 minutes
-      setTimeout(() => {
-        global.GoatBot.onDeleteStore.delete(messageID);
-      }, 5 * 60 * 1000);
-
+      global.rsendStore.set(messageID, { body: body || "" });
       return;
     }
 
-    // When message unsent
-    if (type === "message_unsend") {
-      const savedData = global.GoatBot.onDeleteStore.get(messageID);
+    const saved = global.rsendStore.get(messageID);
+    if (!saved || senderID == api.getCurrentUserID()) return;
 
-      if (!savedData || senderID == api.getCurrentUserID())
-        return;
+    const name = await usersData.getName(senderID) || "Someone";
 
-      try {
-        const name = await usersData.getName(senderID) || "Someone";
+    await api.sendMessage(
+      `⚠️ sir unsend করে লাভ নাই 😁 ${name} deleted a message:\n\n${saved.body}`,
+      threadID
+    );
 
-        let msgBody = `⚠️ ${name} একটি মেসেজ ডিলিট করেছে.\n\n`;
-        if (savedData.body)
-          msgBody += `📩 Message:\n${savedData.body}`;
-
-        const attachmentStreams = [];
-        const cachePath = path.join(__dirname, "cache");
-
-        if (!fs.existsSync(cachePath))
-          fs.mkdirSync(cachePath);
-
-        for (const file of savedData.attachments) {
-          const ext =
-            file.type === "photo" ? "jpg" :
-            file.type === "video" ? "mp4" :
-            file.type === "audio" ? "mp3" :
-            file.type === "animated_image" ? "gif" :
-            "bin";
-
-          const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const filePath = path.join(cachePath, fileName);
-
-          const response = await axios.get(file.url, {
-            responseType: "arraybuffer"
-          });
-
-          fs.writeFileSync(filePath, Bufferी);
-
-          attachmentStreams.push(fs.createReadStream(filePath));
-
-          setTimeout(() => {
-            if (fs.existsSync(filePath))
-              fs.unlinkSync(filePath);
-          }, 10000);
-        }
-
-        await api.sendMessage({
-          body: msgBody,
-          attachment: attachmentStreams
-        }, threadID);
-
-        global.GoatBot.onDeleteStore.delete(messageID);
-
-      } catch (err) {
-        console.error("RSEND ERROR:", err);
-      }
-    }
+    global.rsendStore.delete(messageID);
   }
 };
