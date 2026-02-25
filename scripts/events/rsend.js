@@ -5,61 +5,87 @@ const path = require("path");
 module.exports = {
   config: {
     name: "rsend",
-    version: "3.0",
-    author: "SaAd & Gemini",
-    description: "Recover unsent messages and media"
-  },
-
-  onStart: async function ({ api, event }) {
+    version: "4.0",
+    author: "Saad",
+    category: "events",
+    description: "Recover unsent messages (text & media)"
   },
 
   onChat: async function ({ api, event, usersData }) {
-    const { messageID, senderID, threadID, body: content, type, attachments } = event;
+    const { messageID, senderID, threadID, body, attachments, type } = event;
 
-    if (!global.logMessage) global.logMessage = new Map();
+    if (!global.GoatBot.onDeleteStore)
+      global.GoatBot.onDeleteStore = new Map();
 
+    // Save normal messages
     if (type !== "message_unsend") {
-      global.logMessage.set(messageID, {
-        body: content || "",
+      global.GoatBot.onDeleteStore.set(messageID, {
+        body: body || "",
         attachments: attachments || []
       });
+
+      // Auto cleanup after 5 minutes
+      setTimeout(() => {
+        global.GoatBot.onDeleteStore.delete(messageID);
+      }, 5 * 60 * 1000);
+
       return;
     }
 
+    // When message is unsent
     if (type === "message_unsend") {
-      const savedMsg = global.logMessage.get(messageID);
-      if (!savedMsg || senderID == api.getCurrentUserID()) return;
+      const savedData = global.GoatBot.onDeleteStore.get(event.messageID);
+
+      if (!savedData || senderID == api.getCurrentUserID())
+        return;
 
       try {
         const name = await usersData.getName(senderID) || "Someone";
-        let msgBody = `${name}, নিগ্গা 🙏🐸 delete a massage\n\n${savedMsg.body ?`#: ${savedMsg.body}` : ""}`;
 
-        const streams = [];
-        const cacheDir = path.join(__dirname, "cache");
-        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+        let msgBody = `⚠️ ${name} একটি মেসেজ ডিলিট করেছে.\n\n`;
+        if (savedData.body)
+          msgBody += `📩 Message:\n${savedData.body}`;
 
-        for (const attachment of savedMsg.attachments) {
-          const ext = attachment.type === "photo" ? "jpg" : 
-                      attachment.type === "video" ? "mp4" : 
-                      attachment.type === "audio" ? "mp3" : "bin";
-          
-          const filePath = path.join(cacheDir, `${Date.now()}_${attachment.ID}.${ext}`);
-          const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
+        const attachmentStreams = [];
+        const cachePath = path.join(__dirname, "cache");
+
+        if (!fs.existsSync(cachePath))
+          fs.mkdirSync(cachePath);
+
+        for (const file of savedData.attachments) {
+          const ext =
+            file.type === "photo" ? "jpg" :
+            file.type === "video" ? "mp4" :
+            file.type === "audio" ? "mp3" :
+            file.type === "animated_image" ? "gif" :
+            "bin";
+
+          const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          const filePath = path.join(cachePath, fileName);
+
+          const response = await axios.get(file.url, {
+            responseType: "arraybuffer"
+          });
+
           fs.writeFileSync(filePath, Buffer.from(response.data));
-          streams.push(fs.createReadStream(filePath));
+          attachmentStreams.push(fs.createReadStream(filePath));
+
+          // Auto delete file after send
+          setTimeout(() => {
+            if (fs.existsSync(filePath))
+              fs.unlinkSync(filePath);
+          }, 10000);
         }
 
         await api.sendMessage({
           body: msgBody,
-          attachment: streams
+          attachment: attachmentStreams
         }, threadID);
 
-        streams.forEach(stream => {
-          if (fs.existsSync(stream.path)) fs.unlinkSync(stream.path);
-        });
+        global.GoatBot.onDeleteStore.delete(event.messageID);
 
-      } catch (error) {
-        console.error("Unsend Recovery Error:", error);
+      } catch (err) {
+        console.error("RSEND ERROR:", err);
       }
     }
   }
