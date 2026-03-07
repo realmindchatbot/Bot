@@ -7,7 +7,7 @@ module.exports = {
 	config: {
 		name: "leave",
 		version: "1.4",
-		author: "NTKhang/ SaAd",
+		author: "NTKhang",
 		category: "events"
 	},
 
@@ -47,40 +47,22 @@ module.exports = {
 				const threadName = threadData.threadName;
 				const userName = await usersData.getName(leftParticipantFbId);
 
+				// --- ভিডিও এবং টেক্সট সেটিং ---
+				const isSelfLeave = leftParticipantFbId == event.author;
+				const videoUrl = isSelfLeave ? "https://files.catbox.moe/iscfll.mp4" : "https://files.catbox.moe/enjbh3.mp4";
+				const customBody = isSelfLeave ? `কি মজা ${userName} এই নালায়েক লিভ নিছে 🐸😁` : `${userName} জাহ শালা আবলামি করস কেন 🙄🦵🏻`;
+				// ----------------------------
+
 				let { leaveMessage = getLang("defaultLeaveMessage") } = threadData.data;
 				const form = {
+					body: customBody, // ভিডিওর সাথে এই টেক্সট যাবে
 					mentions: leaveMessage.match(/\{userNameTag\}/g) ? [{
 						tag: userName,
 						id: leftParticipantFbId
 					}] : null
 				};
 
-				leaveMessage = leaveMessage
-					.replace(/\{userName\}|\{userNameTag\}/g, userName)
-					.replace(/\{type\}/g, leftParticipantFbId == event.author ? getLang("leaveType1") : getLang("leaveType2"))
-					.replace(/\{threadName\}|\{boxName\}/g, threadName)
-					.replace(/\{time\}/g, hours)
-					.replace(/\{session\}/g, hours <= 10 ?
-						getLang("session1") :
-						hours <= 12 ?
-							getLang("session2") :
-							hours <= 18 ?
-								getLang("session3") :
-								getLang("session4")
-					);
-
-				form.body = leaveMessage;
-
-				if (leaveMessage.includes("{userNameTag}")) {
-					form.mentions = [{
-						id: leftParticipantFbId,
-						tag: userName
-					}];
-				}
-
-				
 				try {
-					const videoUrl = leftParticipantFbId == event.author ? "https://files.catbox.moe/enjbh3.mp4" : "https://files.catbox.moe/iscfll.mp4";
 					const cacheDir = path.join(__dirname, "cache");
 					if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 					const videoPath = path.join(cacheDir, `leave_${Date.now()}.mp4`);
@@ -93,9 +75,8 @@ module.exports = {
 					setTimeout(() => { if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath); }, 10000);
 					return; 
 				} catch (e) {
-					
+					// ভিডিও লোড না হলে অরিজিনাল মেসেজ ফরম্যাটে পাঠাবে
 				}
-				
 
 				if (threadData.data.leaveAttachment) {
 					const files = threadData.data.leaveAttachment;
