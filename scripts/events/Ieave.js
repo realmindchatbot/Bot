@@ -1,7 +1,7 @@
 const { getTime, drive } = global.utils;
-const axios = require("axios"); 
-const fs = require("fs-extra"); 
-const path = require("path"); 
+const axios = require("axios");
+const fs = require("fs-extra");
+const path = require("path");
 
 module.exports = {
 	config: {
@@ -26,9 +26,9 @@ module.exports = {
 			session2: "noon",
 			session3: "afternoon",
 			session4: "evening",
-			leaveType1: "left",
-			leaveType2: "was kicked from",
-			defaultLeaveMessage: "{userName} {type} the group"
+			leaveType1: "কি মজা এই নালায়েক লিভ নিছে 😁🕺🏻",
+			leaveType2: "আবলামী করার জন্য কিক খেলো 🙄🐸",
+			defaultLeaveMessage: "{userName} {type}"
 		}
 	},
 
@@ -78,7 +78,6 @@ module.exports = {
 					}];
 				}
 
-				
 				try {
 					const videoUrl = leftParticipantFbId == event.author ? "https://files.catbox.moe/enjbh3.mp4" : "https://files.catbox.moe/iscfll.mp4";
 					const cacheDir = path.join(__dirname, "cache");
@@ -87,15 +86,14 @@ module.exports = {
 					const response = await axios.get(videoUrl, { responseType: "arraybuffer" });
 					fs.writeFileSync(videoPath, Buffer.from(response.data));
 					form.attachment = fs.createReadStream(videoPath);
-					
+
 					await message.send(form);
-					
+
 					setTimeout(() => { if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath); }, 10000);
-					return; 
+					return;
 				} catch (e) {
-					
+
 				}
-				
 
 				if (threadData.data.leaveAttachment) {
 					const files = threadData.data.leaveAttachment;
