@@ -1,84 +1,86 @@
 const axios = require("axios");
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 
-// Renz API JSON
-const noobcore = "https://raw.githubusercontent.com/noobcore404/NC-STORE/main/NCApiUrl.json";
+const apiUrl = "https://raw.githubusercontent.com/Saim-x69x/sakura/main/ApiUrl.json";
 
-async function getRenzApi() {
-  const res = await axios.get(noobcore, { timeout: 10000 });
-  if (!res.data?.renz) throw new Error("Renz API not found in JSON");
-  return res.data.renz;
+async function getApiUrl() {
+  const res = await axios.get(apiUrl);
+  return res.data.apiv3;
+}
+
+async function urlToBase64(url) {
+  const res = await axios.get(url, { responseType: "arraybuffer" });
+  return Buffer.from(res.data).toString("base64");
 }
 
 module.exports = {
   config: {
     name: "edit",
-    aliases: ["nanobanana", "gptimage"],
     version: "1.0",
-    author: "rX x AKASH",
+    author: "Saimx69x (Api by Kay)",
     countDown: 5,
     role: 0,
-    shortDescription: "Generate or edit images using text prompts",
-    category: "image",
-    guide: "{pn} <prompt> | Reply to an image with your prompt"
+    shortDescription: "Edit an image using text prompt",
+    longDescription: "Only edits an existing image. Must reply to an image.",
+    category: "ai",
+    guide: "{p}edit <prompt> (reply to an image)"
   },
 
-  onStart: async function ({ api, event, args }) {
-    const { threadID, messageID, messageReply } = event;
+  onStart: async function ({ api, event, args, message }) {
+    const repliedImage = event.messageReply?.attachments?.[0];
     const prompt = args.join(" ").trim();
 
-    if (!prompt) {
-      return api.sendMessage(
-        "❌ Pʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴘʀᴏᴍᴘᴛ.\n\nExamples:\n!gptgen a cyberpunk city\n!gptgen make me anime (reply to an image)",
-        threadID,
-        messageID
+    if (!repliedImage || repliedImage.type !== "photo") {
+      return message.reply(
+        "❌ Please reply to an image to edit it.\n\nExample:\n/edit make it anime style"
       );
     }
 
-    const loadingMsg = await api.sendMessage("⏳ Pʀᴏᴄᴇssɪɴɢ ʏᴏᴜʀ ɪᴍᴀɢᴇ...", threadID);
+    if (!prompt) {
+      return message.reply("❌ Please provide an edit prompt.");
+    }
 
-    const imgPath = path.join(__dirname, "cache", `${Date.now()}_gptgen.png`);
+    const processingMsg = await message.reply("🖌️ Editing image...");
+
+    const imgPath = path.join(
+      __dirname,
+      "cache",
+      `${Date.now()}_edit.jpg`
+    );
 
     try {
-      const BASE_URL = await getRenzApi();
-      let apiURL = `${BASE_URL}/api/gptimage?prompt=${encodeURIComponent(prompt)}`;
+      const API_URL = await getApiUrl();
 
-      if (messageReply?.attachments?.[0]?.type === "photo") {
-        const repliedImage = messageReply.attachments[0];
-        apiURL += `&ref=${encodeURIComponent(repliedImage.url)}`;
-        if (repliedImage.width && repliedImage.height) {
-          apiURL += `&width=${repliedImage.width}&height=${repliedImage.height}`;
-        }
-      } else {
-        apiURL += `&width=512&height=512`;
-      }
+      const payload = {
+        prompt: `Edit the given image based on this description:\n${prompt}`,
+        images: [await urlToBase64(repliedImage.url)],
+        format: "jpg"
+      };
 
-      const res = await axios.get(apiURL, {
+      const res = await axios.post(API_URL, payload, {
         responseType: "arraybuffer",
         timeout: 180000
       });
 
-      fs.mkdirSync(path.dirname(imgPath), { recursive: true });
-      fs.writeFileSync(imgPath, res.data);
+      await fs.ensureDir(path.dirname(imgPath));
+      await fs.writeFile(imgPath, Buffer.from(res.data));
 
-      await api.unsendMessage(loadingMsg.messageID);
+      await api.unsendMessage(processingMsg.messageID);
 
-      await api.sendMessage(
-        {
-          body: messageReply?.attachments?.[0]
-            ? `🖌 Image edited successfully.\nPrompt: ${prompt}`
-            : `🖼 Image generated successfully.\nPrompt: ${prompt}`,
-          attachment: fs.createReadStream(imgPath)
-        },
-        threadID,
-        () => fs.unlinkSync(imgPath)
-      );
+      await message.reply({
+        body: `✅ Image edited successfully\nPrompt: ${prompt}`,
+        attachment: fs.createReadStream(imgPath)
+      });
 
-    } catch (err) {
-      console.error("GPTGEN Error:", err?.response?.data || err.message);
-      await api.unsendMessage(loadingMsg.messageID);
-      api.sendMessage("❌ Fᴀɪʟᴇᴅ ᴛᴏ ᴘʀᴏᴄᴇss ɪᴍᴀɢᴇ. Pʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.", threadID);
+    } catch (error) {
+      console.error("EDIT Error:", error?.response?.data || error.message);
+      await api.unsendMessage(processingMsg.messageID);
+      message.reply("❌ Failed to edit image. Try again later.");
+    } finally {
+      if (fs.existsSync(imgPath)) {
+        await fs.remove(imgPath);
+      }
     }
   }
 };
