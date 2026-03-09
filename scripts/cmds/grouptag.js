@@ -242,4 +242,4 @@ module.exports = {
 
 function showInfoGroupTag(message, groupTag, getLang) {
 	message.reply(getLang("infoGroupTag", groupTag.name, Object.keys(groupTag.users).length, Object.keys(groupTag.users).map(uid => groupTag.users[uid]).join("\n ")));
-}
+		}
