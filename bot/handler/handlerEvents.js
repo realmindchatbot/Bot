@@ -95,11 +95,13 @@ function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, 
 
     // ==========    Check Thread    ========== //
     if (isGroup == true) {
-        if (
+                if (
             threadData.data.onlyAdminBox === true
             && !threadData.adminIDs.includes(senderID)
+            && !adminBot.includes(senderID)
             && !(threadData.data.ignoreCommanToOnlyAdminBox || []).includes(commandName)
         ) {
+
             // check if only admin box
             if (!threadData.data.hideNotiMessageOnlyAdminBox)
                 message.reply(getText("onlyAdminBox", null, null, null, lang));
