@@ -50,7 +50,7 @@ module.exports = {
 
         await api.sendMessage(
           {
-            body: `${userName}\nনতুন মুখ দেখতাছি পরিচয়টা দে আবাল ....👉🏻🤏🏻😫😫`,
+            body: `${userName}\nনতুন মুখ দেখতাছি পরিচয়টা দাও সেনপাই ....👉🏻🤏🏻😫😫`,
             mentions: [
               {
                 tag: userName,
