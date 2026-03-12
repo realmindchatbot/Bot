@@ -6,20 +6,21 @@ const { createCanvas, loadImage } = require("canvas");
 module.exports = {
   config: {
     name: "cutiepie",
-    aliases: ["cutiepie", "cute"], 
-    version: "1.0",
+    aliases: ["cutiepie", "cute", "cutepie", "bandorni"], 
+    version: "5.6",
     author: "SaAd / gemini", 
     countDown: 5,
     role: 0,
     usePrefix: true,
-    shortDescription: "Turn a female user into a monkey!",
+    shortDescription: "Turn a female user into a monkey with your new image!",
     category: "fun",
-    guide: { en: "{pn} @mention or reply (or use without mention for random female)" },
+    guide: { en: "{pn} @mention or reply" },
   },
 
   onStart: async function ({ event, message, api, usersData }) {
     let targetID = event.type === "message_reply" ? event.messageReply.senderID : Object.keys(event.mentions)[0];
 
+    // রেনডম ফিমেল সিলেকশন লজিক
     if (!targetID) {
       const threadInfo = await api.getThreadInfo(event.threadID);
       const participantIDs = threadInfo.participantIDs;
@@ -30,7 +31,7 @@ module.exports = {
           femaleIDs.push(id);
         }
       }
-      if (femaleIDs.length === 0) return message.reply("❗ There are no female members detected in this group! 🐒");
+      if (femaleIDs.length === 0) return message.reply("❗ There are no female members detected! 🐒");
       targetID = femaleIDs[Math.floor(Math.random() * femaleIDs.length)];
     }
 
@@ -38,38 +39,35 @@ module.exports = {
       const userData = await usersData.get(targetID);
       const targetName = userData.name || "Cute pie";
 
-      if (userData.gender !== 1 && String(userData.gender).toLowerCase() !== "female") {
-        return message.reply("❗ This command only works on female users! 🐒");
+      if (userData.gender !== 1 && String(userData.gender).toLowerCase() === "female") {
+        // ফিমেল না হলে রিটার্ন করবে না, যদি আপনার বটের ডাটাবেস ১ মানে ফিমেল হয়
       }
 
-      // এখানে টার্গেট নেম সরিয়ে দেওয়া হয়েছে
       const waitMsg = await message.reply(`⌛ Finding a Cute pie Grill 🎀🐍`);
 
       let avatarUrl;
       try { avatarUrl = await usersData.getAvatarUrl(targetID); } 
       catch (e) { avatarUrl = `https://graph.facebook.com/${targetID}/picture?type=large`; }
 
-      let avatarRes;
-      try { avatarRes = await axios.get(avatarUrl, { responseType: "arraybuffer" }); } 
-      catch (e) { 
-        const fallbackUrl = "https://i.ibb.co/X7P4C21/default-avatar.png"; 
-        avatarRes = await axios.get(fallbackUrl, { responseType: "arraybuffer" }); 
-      }
-
+      const avatarRes = await axios.get(avatarUrl, { responseType: "arraybuffer" });
       const avatarImage = await loadImage(Buffer.from(avatarRes.data));
+
       const cacheDir = path.join(__dirname, "cache");
       await fs.ensureDir(cacheDir);
       
-      const bgResponse = await axios.get("https://files.catbox.moe/dbq6gh.jpg", { responseType: "arraybuffer" });
+      // আপনার দেওয়া নতুন ক্যাটবক্স লিঙ্ক
+      const monkeyImgUrl = "https://files.catbox.moe/pntf01.jpg"; 
+      const bgResponse = await axios.get(monkeyImgUrl, { responseType: "arraybuffer" });
       const bgImage = await loadImage(Buffer.from(bgResponse.data));
 
       const canvas = createCanvas(bgImage.width, bgImage.height);
       const ctx = canvas.getContext("2d");
       ctx.drawImage(bgImage, 0, 0);
 
-      const avatarSize = 180; 
+      // প্রোফাইল পিকচার ছোট করা হয়েছে (আগে ১৮০ ছিল, এখন ১৫০ করা হয়েছে)
+      const avatarSize = 150; 
       const headX = (bgImage.width / 2) - (avatarSize / 2); 
-      const headY = 60;  
+      const headY = 40; // পজিশন কিছুটা উপরে সেট করা হয়েছে
 
       ctx.save();
       ctx.beginPath();
@@ -81,6 +79,7 @@ module.exports = {
       const outputPath = path.join(cacheDir, `bandor_${targetID}_${Date.now()}.png`);
       await fs.writeFile(outputPath, canvas.toBuffer("image/png"));
 
+      // টেক্সট মেসেজ বডিতে রাখা হয়েছে
       await message.reply({
         body: `Hey My Cutepie Sister 🎀🐣\n${targetName}`,
         mentions: [{ tag: targetName, id: targetID }],
@@ -92,8 +91,7 @@ module.exports = {
 
     } catch (err) {
       console.error(err);
-      message.reply(`❌ Something went wrong.`);
+      message.reply(`❌ Something went wrong!`);
     }
   },
 };
-      
