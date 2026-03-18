@@ -1,6 +1,6 @@
 module.exports = {
   config: {
-    name: "autoinvite_control",
+    name: "antiout",
     aliases: ["antiout"],
     version: "1.0",
     author: "SaAd / gemini",
