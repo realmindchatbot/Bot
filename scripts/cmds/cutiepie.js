@@ -43,7 +43,7 @@ module.exports = {
         // ফিমেল না হলে রিটার্ন করবে না, যদি আপনার বটের ডাটাবেস ১ মানে ফিমেল হয়
       }
 
-      const waitMsg = await message.reply(`⌛ Finding a Cute pie Grill 🎀🐍`);
+      const waitMsg = await message.reply(`⌛ Generating a Cute Pie Grill 🎀🐍`);
 
       let avatarUrl;
       try { avatarUrl = await usersData.getAvatarUrl(targetID); } 
