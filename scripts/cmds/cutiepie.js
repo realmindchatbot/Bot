@@ -8,7 +8,7 @@ module.exports = {
     name: "cutiepie",
     aliases: ["cutiepie", "cute", "cutepie", "bandorni"], 
     version: "5.6",
-    author: "SaAd", 
+    author: "SaAd / gemini", 
     countDown: 5,
     role: 0,
     usePrefix: true,
@@ -67,7 +67,7 @@ module.exports = {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(bgImage, 0, 0);
 
-      const avatarSize = 100; // আপনার চাহিদা মতো ১০০ রাখা হয়েছে
+      const avatarSize = 150; // আপনার চাহিদা মতো ১০০ রাখা হয়েছে
       const headX = (bgImage.width / 2) - (avatarSize / 2); 
       const headY = 40; 
 
